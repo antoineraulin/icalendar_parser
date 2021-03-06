@@ -5,22 +5,22 @@ import 'package:meta/meta.dart';
 /// Core object
 class ICalendar {
   /// iCalendar's components list.
-  final List<Map<String, dynamic>> data;
+  final List<Map<String, dynamic>>? data;
 
   /// iCalendar's fields.
-  final Map<String, dynamic> headData;
+  final Map<String, dynamic>? headData;
 
   /// `VERSION` of the object.
-  String get version => headData['version'];
+  String? get version => headData!['version'];
 
   /// `PRODID` of the object.
-  String get prodid => headData['prodid'];
+  String? get prodid => headData!['prodid'];
 
   /// `CALSCALE` of the object.
-  String get calscale => headData['calscale'];
+  String? get calscale => headData!['calscale'];
 
   /// `METHOD` of the object.
-  String get method => headData['method'];
+  String? get method => headData!['method'];
 
   /// Default constructor.
   ICalendar({this.data, this.headData});
@@ -105,7 +105,7 @@ class ICalendar {
       return lastEvent;
     },
     'END': (String value, Map<String, String> params, List events,
-        Map<String, dynamic> lastEvent, List<Map<String, dynamic>> data) {
+        Map<String, dynamic>? lastEvent, List<Map<String, dynamic>?> data) {
       if (value == 'VCALENDAR') return lastEvent;
 
       data.add(lastEvent);
@@ -131,14 +131,6 @@ class ICalendar {
     'SUMMARY': _generateSimpleParamFunction('summary'),
     'DESCRIPTION': _generateSimpleParamFunction('description'),
     'LOCATION': _generateSimpleParamFunction('location'),
-    'SITE': _generateSimpleParamFunction('site'),
-    'PROF': _generateSimpleParamFunction('prof'),
-    'TITLE': _generateSimpleParamFunction('title'),
-    'TYPECOURS': _generateSimpleParamFunction('typeCours'),
-    'FLAGPRESENTIEL': _generateSimpleParamFunction('flagpresentiel'),
-    'NOTES': _generateSimpleParamFunction('notes'),
-    'GROUPE': _generateSimpleParamFunction('groupe'),
-    'EV_TYPE': _generateSimpleParamFunction('evType'),
     'URL': _generateSimpleParamFunction('url'),
     'ORGANIZER': (String value, Map<String, String> params, List events,
         Map<String, dynamic> lastEvent) {
@@ -176,7 +168,7 @@ class ICalendar {
       final mail = value.replaceAll('MAILTO:', '').trim();
       final elem = <String, String>{};
       if (params.containsKey('CN')) {
-        elem['name'] = params['CN'].trim();
+        elem['name'] = params['CN']!.trim();
       }
       params.forEach((key, value) {
         if (key != 'CN') {
@@ -218,9 +210,9 @@ class ICalendar {
   /// If a field with the same name already exists the method will throw a
   /// `ICalendarFormatException`.
   static void registerField({
-    @required String field,
+    required String field,
     Function(String value, Map<String, String> params, List event,
-            Map<String, dynamic> lastEvent)
+            Map<String, dynamic> lastEvent)?
         function,
   }) {
     if (_objects.containsKey(field))
@@ -253,8 +245,8 @@ class ICalendar {
     List<Map<String, dynamic>> data = [];
     Map<String, dynamic> _headData = {};
     List events = [];
-    Map<String, dynamic> lastEvent = {};
-    String currentName;
+    Map<String, dynamic>? lastEvent = {};
+    String? currentName;
 
     if (lines.first != 'BEGIN:VCALENDAR')
       throw ICalendarBeginException(
@@ -278,7 +270,7 @@ class ICalendar {
       List<String> dataLine = line.split(':');
       if (dataLine.length < 2) {
         if (line.isNotEmpty && currentName != null) {
-          lastEvent[currentName] += line;
+          lastEvent![currentName] += line;
         }
         continue;
       }
@@ -300,10 +292,10 @@ class ICalendar {
         currentName = name.toLowerCase();
         if (name == 'END') {
           currentName = null;
-          lastEvent = _objects[name](value, params, events, lastEvent, data);
+          lastEvent = _objects[name]!(value, params, events, lastEvent, data);
         } else
           lastEvent =
-              _objects[name](value, params, events, lastEvent ?? _headData);
+              _objects[name]!(value, params, events, lastEvent ?? _headData);
       }
     }
     if (!_headData.containsKey('version'))
